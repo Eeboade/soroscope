@@ -97,6 +97,15 @@ impl LocalRunner {
         &self,
         invocation: &ContractInvocation,
     ) -> Result<SimulationResult, SimulationError> {
+        self.simulate_with_protocol(invocation, None).await
+    }
+
+    /// Run an invocation using a specific Soroban protocol version.
+    pub async fn simulate_with_protocol(
+        &self,
+        invocation: &ContractInvocation,
+        protocol_version: Option<u32>,
+    ) -> Result<SimulationResult, SimulationError> {
         let wasm_bytes = {
             let store = self.wasm_store.read().await;
             match store.get(&invocation.contract_hash) {
@@ -114,7 +123,7 @@ impl LocalRunner {
         // it onto the blocking pool so the async runtime keeps serving
         // other simulations.
         let resources = tokio::task::spawn_blocking(move || {
-            execute_wasm_invocation(wasm_bytes, function_name, args)
+            execute_wasm_invocation(wasm_bytes, function_name, args, protocol_version)
         })
         .await
         .map_err(|e| {
@@ -175,8 +184,9 @@ fn execute_wasm_invocation(
     wasm_bytes: Vec<u8>,
     function_name: String,
     args: Vec<String>,
+    protocol_version: Option<u32>,
 ) -> Result<SorobanResources, SimulationError> {
-    crate::simulation::profile_contract(wasm_bytes, function_name, args, None, None)
+    crate::simulation::profile_contract(wasm_bytes, function_name, args, protocol_version, None)
 }
 
 /// Match the fee shape of `SimulationEngine::calculate_cost` so results from

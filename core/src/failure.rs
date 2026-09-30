@@ -257,7 +257,7 @@ fn extract_contract_error_code(detail: &str) -> Option<ContractErrorCode> {
 /// to the wrong place.
 pub fn function_from_diagnostic(detail: &str) -> Option<String> {
     // A named frame: `Contract(<id>).<name>(` or `contract::<name>`.
-    for (open, close) in [('(', ')'), ('[', ']') {
+    for (open, close) in [('(', ')'), ('[', ']')] {
         let mut rest = detail;
         while let Some(start) = rest.find(open) {
             let after = &rest[start + 1..];
